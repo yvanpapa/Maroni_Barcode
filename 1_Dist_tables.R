@@ -1,18 +1,16 @@
 ####1: CREATE DIST TABLES FROM DNA AND LOCS####
 #This script computes distance matrices and other useful tables for
-#each species. If you don't want to compute it everytime you produce
-#maps just save the results as env_1_Dist_tables.RData and load it before PHYLIN ANALYSIS AND FIGS
+#each species.
 
 #Inputs needed: 
-#1)Maroni_loc.txt
-#2)all_seq.fas
+#1)Maroni_loc.txt   Tab-delimited text file with five columns: Species, Lat, Lon, field.num, Exact_Site
+#2)all_seq.fas      Fasta file containing all aligned sequences. Name of sequences must be coded as Genus_species|Sample_code
 
 #Useful tip if all_seq.fas comes fom BOLD: use GBOL.*?[|] to remove the GBOL characters
-#Other useful tip: Check carefully that species names match between Maroni loc and all_seq! (ex: G. brevispinnis...)
+#Check carefully that species names match between Maroni loc and all_seq
 
 ####MUST BE DEFINED BY USER #####
 session1<-"your_session_directory_here"
-session1<-"E:/BARCODE_MARONI/SCRIPTS_AND_DATA/LANDSCAPES_PIPELINE/1_Dist_tables"
 setwd(session1)
 
 ####ALL PACKAGES##### not including their dependencies
@@ -23,7 +21,6 @@ dir.create("outputs")
 dir.create("outputs/matdist")
 dir.create("outputs/att_tables")
 
-
 #dfloc: df with 5 c: Species, Lat, Lon, field num, exact site, ordered by field.num
 dfloc<-read.table("Maroni_loc.txt",header = T)
 dfloc<- dfloc[order(dfloc$field.num),] 
@@ -31,7 +28,6 @@ dfloc<- dfloc[order(dfloc$field.num),]
 #dfdna: input=dna sequences; output=df with 2 c: 1)Species|field.numb 2)seq as character strings
 #Do not forget to change spaces into underscores before
 #AND remove BOLD identifiers with GBOL.*?[|]
-#library(ape)
 read.dna("all_seq.fas",format="fasta",as.character=T)->myDNA #heavy
 dfdna<-as.data.frame(myDNA) #heavy
 colnames(dfdna)<-seq(1:length(dfdna[1,]))
@@ -122,12 +118,3 @@ rm(df_split,dfdna,dfloc,dflocdna,list_dflocdna_sp,list_seqmats,list_seqmats2,lis
 #rm(list_att_tables,list_mat_dist,v_species)
 
 save.image("env_1_Dist_tables.RData")
-
-#### package summary and unload ####
-
-library(NCmisc)
-list.functions.in.file("1_Dist_tables.R")
-
-detach("package:ape", unload=TRUE)
-detach("package:NCmisc", unload=TRUE)
-(.packages())
