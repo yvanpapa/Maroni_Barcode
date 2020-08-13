@@ -1,16 +1,13 @@
 ######### 4: WPGMA ######### (or any of the best clustering method) ####
-### !!! IF YOU DONT WANT TO RUN THE TEST METHODS, GO DIRECTLY TO "RUN PVCLUST BY USING WPGMA"
+### !!! If you don't want to run the test methods, skkp to "run pvclust by using WPGMA"
 
 #Inputs needed:
 #pca18 (in 4_PCA environment) 
 
 session4<-"your_session4_directory_here"
-session4<-"E:/BARCODE_MARONI/SCRIPTS_AND_DATA/LANDSCAPES_PIPELINE/4_PCA"
 load(paste0(session4,"/env_4_PCA_all_data.RData")) 
 
-
 session5<-"your_session_directory_here"
-session5<-"E:/BARCODE_MARONI/SCRIPTS_AND_DATA/LANDSCAPES_PIPELINE/5_WPGMA"
 setwd(session5)
 
 dir.create("clust_tests")
