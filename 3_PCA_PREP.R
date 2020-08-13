@@ -1,17 +1,15 @@
 ######### 3: PCA #########
 
 #Inputs needed:
-#Session 2 environment
+#2_Landscapes environment
 #IF YOU DONT WANT TO SPEND 2H RUNNING IT, YOU WILL NEED DF6.RDS
 #Also need df6_2 if dont want to wait 15min
 
 ####MUST BE DEFINED BY USER #####
-session2<-"your_session2_directory_here"
-session2<-"E:/BARCODE_MARONI/SCRIPTS_AND_DATA/LANDSCAPES_PIPELINE/2_Landcapes"
+session2<-"your_2_Landscapes_directory_here"
 load(paste0(session2,"/env_landscapes.RData")) 
 
 session3<-"your_session_directory_here"
-session3<-"E:/BARCODE_MARONI/SCRIPTS_AND_DATA/LANDSCAPES_PIPELINE/3_PCA_PREP"
 setwd(session3)
 
 ####ALL PACKAGES##### not including their dependencies
@@ -28,7 +26,7 @@ library(raster)
 
 dir.create("outputs")
 
-#### 3.1: COMPILE DF FOR PCA (SUPER SLOW) ####
+#### 3.1: COMPILE DF FOR PCA (CAN BE VERY SLOW) ####
 #lz is the list which contains the 179 df with x, y and z
 norm_listxyz->lz
 names(lz)<-v_species[1:length(lz)]
@@ -37,8 +35,7 @@ lz2<-lz[-remove]  #we remove the empty dfs->128 now
 #! From now on, number IDs don't correspond anymore
 lapply(lz2, function(i) paste(i$x,i$y,sep="/"))->xy #create list of columns with each xy coordinate together in one case only
 lz3 <- mapply(cbind, lz2, "xy"=xy, SIMPLIFY=F) #a bit slow ~10 sec
-
-#means=multispecies df 
+ 
 as.data.frame(n_means)->means #means=multispecies df
 means$xy<-paste(means$x,means$y,sep="/")
 t(means)->tmeans
@@ -46,7 +43,7 @@ colnames(tmeans)<-tmeans[4,]
 data.table((t(as.data.frame(tmeans[3,]))))->tmeans
 tmeans<-cbind(data.table(Species="All_species",tmeans)) #tmeans=line with all the multisp values
 
-tmeans->df6  #it's called df6 because it was the 6th test
+tmeans->df6  
 #View(df6[,1:20])
 
 
@@ -163,7 +160,7 @@ rbind(df18_2,y=y)->df18_2
 
 df18_3<-df18_2[,order(-df18_2[131,],df18_2[130,])]
 
-#TESTS VISULALISATION:
+#TESTS VISUALISATION:
 as.matrix(df18_3)->m_3
 #View(m_3[,1:20])
 #scatter_fill(m_3[130,],m_3[131,],m_3[4,],nlevels=10,main="TEST",pch=".",cex=8)
