@@ -7,11 +7,9 @@
 
 ####MUST BE DEFINED BY USER #####
 session3<-"your_session3_directory_here"
-session3<-"E:/BARCODE_MARONI/SCRIPTS_AND_DATA/LANDSCAPES_PIPELINE/3_PCA_PREP"
 readRDS(paste0(session3,"/df18.rds"))->df18
 
 session4<-"your_session_directory_here"
-session4<-"E:/BARCODE_MARONI/SCRIPTS_AND_DATA/LANDSCAPES_PIPELINE/4_PCA"
 setwd(session4)
 
 #### 4.1: DO THE PCAs #####
@@ -592,5 +590,3 @@ dev.off()
 
 
 save.image("env_4_PCA_all_data.RData")
-
-
