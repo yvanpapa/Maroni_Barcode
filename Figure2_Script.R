@@ -1,15 +1,12 @@
 #PLEASE REFER TO README.txt TO KNOW REQUIRED INPUTS
 
 session<-"your_session_directory_here"
-session<-"E:/BARCODE_MARONI/SCRIPTS_AND_DATA/FIGURE2"
 setwd(session)
 
 library(reshape2)
 #melt
 library(ggplot2)
 #ggplot
-
-
 
 #How many sp by genus?
 taxonomy<-read.table("Taxonomy_spreadsheet.txt", header=T, row.names=NULL,sep="\t")
