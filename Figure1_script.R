@@ -1,8 +1,5 @@
-#PLEASE REFER TO README.txt TO KNOW REQUIRED INPUTS
-
 ####MUST BE DEFINED BY USER #####
 session_Fig1<-"your_session_directory_here"
-session_Fig1<-"E:/BARCODE_MARONI/SCRIPTS_AND_DATA/FIGURE1"
 setwd(session_Fig1)
 
 library(raster)
@@ -16,7 +13,7 @@ library(mapplots)
 
 #plot elevation basemap
 ext_basemap<-extent(-56.2,-53.0, 2.1, 5.85)
-pal <- colorRampPalette(c("yellowgreen","chartreuse4","goldenrod","brown"))
+palÂ <-Â colorRampPalette(c("yellowgreen","chartreuse4","goldenrod","brown"))
 basemap<-raster("shapefiles/sa_dem_30s.bil")   #basemap
 plot(basemap,col=(pal(1000)), ext=ext_basemap,colNA="dodgerblue3")
 
