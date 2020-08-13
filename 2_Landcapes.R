@@ -1,23 +1,23 @@
 ###2: PHYLIN ANALYSIS AND MAPS###
 
 #Inputs needed:
-#Session 1 environment
+#1_Dist_tables environment
 #Figure 1 environment (Figure1_data.RData)
-#Maroni shapefile environment (was drawn by hand, formerly a)
+#Maroni shapefile environment (was drawn by hand, formerly a) 
+###Maroni shapefile env is not enough anymore (raster update). Now you also need:
+#shapefiles directory with sa_dem_30s.bil
 
 ####MUST BE DEFINED BY USER #####
-session1<-"your_session1_directory_here"
-session1<-"E:/BARCODE_MARONI/SCRIPTS_AND_DATA/LANDSCAPES_PIPELINE/1_Dist_tables"
+session1<-"~/1_Dist_tables"
 load(paste0(session1,"/env_1_Dist_tables.RData")) #~10 sec
 #3 objects
 
 session_Fig1<-"your_session_figure1_directory_here"
-session_Fig1<-"E:/BARCODE_MARONI/SCRIPTS_AND_DATA/FIGURE1"
 load(paste0(session_Fig1,"/Figure1_data.RData")) 
 #4 objects: basemap, ext_basemap, pal, maroni_basins
 
 session2<-"your_session2_directory_here"
-session2<-"E:/BARCODE_MARONI/SCRIPTS_AND_DATA/LANDSCAPES_PIPELINE/2_Landcapes"
+session2<-"E:/BARCODE_MARONI/200416_YP/SCRIPTS_AND_DATA/LANDSCAPES_PIPELINE/2_Landcapes"
 setwd(session2)
 
 load("maroni_shapefile.RData")
@@ -48,6 +48,7 @@ list()->norm_listxyz #for nomalized multispecies
 list()->list_rasters
 
 #data (grid) #table containing grid centroids defining the interpolation area (7955 cells)
+basemap<-raster("shapefiles/sa_dem_30s.bil")
 as.data.frame(basemap,xy=T)->grid_tot
 grid_tot2<-grid_tot[,-3]
 
@@ -142,10 +143,10 @@ for(i in zerodists)
     } else {
       ## bellow if we want to plot the raw values, but I just want the normalized ones
       #rasterFromXYZ(xyz)->rxyz
-      #créer un "masque" pour croper au bassin
+      #crÃ©er un "masque" pour croper au bassin
       #crop <- setValues(rxyz, NA)
       #myshp.r <- rasterize(a, crop)
-      #nouveau raster K2P cropé
+      #nouveau raster K2P cropÃ©
       #rxyz.masked <- mask(x=rxyz, mask=myshp.r)
       
       #Plot pure K2p distS
@@ -370,7 +371,7 @@ for(i in index)
     
     #SAME WITH NORMALIZED INTERPOLATION OF RESIDUALS
     
-    ##Normaliser directement sur les résidus (et non l'interpol) engendre des erreurs, je sais plus pk
+    ##Normaliser directement sur les rÃ©sidus (et non l'interpol) engendre des erreurs, je sais plus pk
     ##norm<-function(resid){(resid-min(resid))/(max(resid)-min(resid))}
     ##norm(resid)->norm_resid
     ##mp->norm_mp
@@ -648,4 +649,3 @@ detach("package:phylin", unload=TRUE)
 detach("package:raster", unload=TRUE)
 detach("package:xlsx", unload=TRUE)
 (.packages())
-
