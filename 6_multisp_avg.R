@@ -4,15 +4,12 @@
 #lz, n_means (in 3_PCA_PREP)
 
 session3<-"your_session3_directory_here"
-session3<-"E:/BARCODE_MARONI/SCRIPTS_AND_DATA/LANDSCAPES_PIPELINE/3_PCA_PREP"
 load(paste0(session3,"/env_3_PCA_prep_all_data.RData")) #~10 sec
 
 Fig4<-"your_Fig4_directory_here"
-Fig4<-"E:/BARCODE_MARONI/SCRIPTS_AND_DATA/FIGURE4"
 load(paste0(Fig4,"/Figure4_data.RData")) #~10 sec
 
 session6<-"your_session_directory_here"
-session6<-"E:/BARCODE_MARONI/SCRIPTS_AND_DATA/LANDSCAPES_PIPELINE/6_multisp_avg"
 setwd(session6)
 
 library(dplyr)
@@ -31,7 +28,6 @@ ny=5
 nx=10
 
 #lz is the ist which contains 179 df with x, y and z
-#lz est la liste qui contient les 179 df avec x, y et z
 
 #Need to add All_species in lz
 lz->lzm
@@ -105,4 +101,3 @@ dev.print(png, paste0('./pvclust_maps.png'),width = 1024, height = 768)
 dev.off()
 
 save.image("env_6_multisp_avg.RData")
-
