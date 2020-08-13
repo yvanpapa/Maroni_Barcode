@@ -1,0 +1,1660 @@
+library(dplyr)
+library(readxl)
+
+setwd(your_working_directory)
+list.files()->all_species
+#Unfortunately this script requires to download several files manually from BOLD first, for each species
+all_species[-grep("output",all_species)]->all_species
+list()->all_dftot2
+list()->all_pca_table2
+data.frame(Haplotypes=factor(),Basins=factor(),K2P=numeric())->all_heatmaps
+
+
+for (isp in 1:length(all_species)){
+#  isp<-1
+  #for (isp in c(1:22)){
+  
+  
+  species<-all_species[isp]
+  species_names<-c()
+  species_names<-c(species_names,species)
+  setwd("E:/BARCODE_MARONI/200416_YP/basins_comp_all/")
+  setwd(species)
+  
+  filenames<-c()
+  list.files()->files
+  toMatch <- c("West_G", "North_G", "East_G")
+  matches<-unique(grep(paste(toMatch,collapse="|"),files, value=TRUE))
+  
+  for (i in 1:length(matches)){
+    filenames[i]<-matches[i]
+  }
+  
+  col1<-c("Region","Sample ID","Sequence ID","Location")
+  
+  cols<-list()
+  for (i in 1:length(filenames)){
+    cols[[i]]<-c(strsplit(filenames[i],"_")[[1]][1],strsplit(filenames[i],"_")[[1]][4],strsplit(filenames[i],"_")[[1]][2],strsplit(filenames[i],"_")[[1]][9])
+  }
+  
+  df_tot<- data.frame(t(matrix(unlist(cols), nrow=length(cols), byrow=T)),stringsAsFactors=FALSE)
+  df_tot<- cbind(col1,df_tot)
+  
+  list()->dfs_raw
+  list()->dfs_nas
+  list()->dfs_filtered
+  
+  for (i in 1:length(filenames)) {
+    
+    df <- read.csv(filenames[i], header=T,sep="\t",stringsAsFactors=FALSE)
+    
+    #if table is comma separated instead of tab separated
+    if (length(df)==1){
+      rm(df)
+      df <- read.csv(filenames[i], header=T,sep=",",stringsAsFactors=FALSE)
+    }
+    
+    #REMOVE THE DUPLICATE OF THE SAME SEQUENCE
+    which(df$SampleID==df_tot[2,i+1])
+    df<-df[-(which(df$SampleID==df_tot[2,i+1])),]
+    
+    df[,11] <- NA
+    colnames(df)[11]<-'basins'
+    
+    df[grep("Suriname",df$Country),11]<-"Country_Suriname"
+    df[grep("French Guiana",df$Country),11]<-"French_Guiana"
+    df[grep("Colombia",df$Country),11]<-"Colombia"
+    df[grep("Barima-Waini",df$Province),11]<-"West Guyana"
+    df[grep("Berbice",df$Province),11]<-"West Guyana"
+    df[grep("Takutu",df$Region),11]<-"East Guyana"
+    df[grep("Essequibo",df$Sector),11]<-"Essequibo"
+    df[grep("Essequibo",df$Region),11]<-"Essequibo"
+    df[grep("Corantijn",df$Sector),11]<-"Corantijn"
+    df[grep("Corantijn",df$Region),11]<-"Corantijn"
+    df[grep("Gran Rio",df$Sector),11]<-"Corantijn"
+    df[grep("Nickerie",df$Sector),11]<-"Nickerie"
+    df[grep("Coppename",df$Sector),11]<-"Coppename"
+    df[grep("Coppename",df$Region),11]<-"Coppename"
+    df[grep("Saramacca",df$Sector),11]<-"Saramacca"
+    df[grep("Suriname",df$Sector),11]<-"Suriname"
+    df[grep("Suriname River",df$Region),11]<-"Suriname"
+    df[grep("Commewij",df$Sector),11]<-"Commewijne"
+    df[grep("Palomeu",df$Exact.Site),11]<-"West Maroni"
+    df[grep("Paloemeu",df$Exact.Site),11]<-"West Maroni"
+    df[grep("Paloemeu",df$Sector),11]<-"West Maroni"
+    df[grep("Tapanahony",df$Exact.Site),11]<-"West Maroni"
+    df[grep("Tapanahony",df$Sector),11]<-"West Maroni"
+    df[grep("Wayu Camp",df$Exact.Site),11]<-"West Maroni"
+    df[grep("Weyu Camp",df$Exact.Site),11]<-"West Maroni"
+    df[grep("Wawapsi",df$Exact.Site),11]<-"West Maroni"
+    df[grep("Balate",df$Exact.Site),11]<-"North Maroni"
+    df[grep("Tupo Creek",df$Exact.Site),11]<-"North Maroni"
+    df[grep("Crique Tupo",df$Exact.Site),11]<-"North Maroni"
+    df[grep("Crique Cascades",df$Exact.Site),11]<-"North Maroni"
+    df[grep("Cascades Creek",df$Exact.Site),11]<-"North Maroni"
+    df[grep("Creek Cascades",df$Exact.Site),11]<-"North Maroni"
+    df[grep("Balat",df$Exact.Site),11]<-"North Maroni"
+    df[grep("Serpent",df$Exact.Site),11]<-"North Maroni"
+    df[grep("Nassau",df$Exact.Site),11]<-"North Maroni"
+    df[grep("Balate",df$Exact.Site),11]<-"North Maroni"
+    df[grep("Voltaire",df$Exact.Site),11]<-"North Maroni"
+    df[grep("Beiman",df$Exact.Site),11]<-"North Maroni"
+    df[grep("Sparouine",df$Exact.Site),11]<-"North Maroni"
+    df[grep("Beiman",df$Sector),11]<-"North Maroni"
+    df[grep("Maripasoula",df$Region),11]<-"East Maroni"
+    df[grep("Langa Soula",df$Exact.Site),11]<-"East Maroni"
+    df[grep("Langa Sula",df$Exact.Site),11]<-"East Maroni"
+    df[grep("Longa Soula",df$Exact.Site),11]<-"East Maroni"
+    df[grep("Saut Wayo",df$Exact.Site),11]<-"East Maroni"
+    df[grep("Cayode",df$Exact.Site),11]<-"East Maroni"
+    df[grep("Antecume",df$Exact.Site),11]<-"East Maroni"
+    df[grep("Lawa",df$Sector),11]<-"East Maroni"
+    df[grep("Lawa",df$Exact.Site),11]<-"East Maroni"
+    df[grep("Litany",df$Exact.Site),11]<-"East Maroni"
+    df[grep("Litany",df$Sector),11]<-"East Maroni"
+    df[grep("Mana River",df$Sector),11]<-"Mana"
+    df[grep("Mana River",df$Region),11]<-"Mana"
+    df[grep("Iracoubo",df$Sector),11]<-"Iracoubo"
+    df[grep("Sinnamary",df$Sector),11]<-"Sinnamary"
+    df[grep("Sinnamary",df$Region),11]<-"Sinnamary"
+    df[grep("Kourou",df$Sector),11]<-"Kourou"
+    df[grep("Comt",df$Sector),11]<-"Comte Orapu"
+    df[grep("Comt",df$Exact.Site),11]<-"Comte Orapu"
+    df[grep("Orapu",df$Sector),11]<-"Comte Orapu"
+    df[grep("Mahury",df$Sector),11]<-"Comte Orapu"
+    df[grep("Approuague",df$Sector),11]<-"Approuague Kaw"
+    df[grep("Approuague",df$Region),11]<-"Approuague Kaw"
+    df[grep("Aratai",df$Sector),11]<-"Approuague Kaw"
+    df[grep("\\bKaw\\b",df$Sector),11]<-"Approuague Kaw"
+    df[grep("Oyap",df$Sector),11]<-"Oyapock"
+    df[grep("Brazil",df$Country),11]<-"Brazil"
+    df[grep("Argentina",df$Country),11]<-"Argentina"
+    
+    df2<-df[FALSE,]
+    for (j in unique(df$basins))
+    {
+      rbind(df2,df[which(df$basins==j)[1],c(11,10)])->df2}
+    
+    if (length(which(is.na(df2)))>0){
+      df2<-df2[-(which(is.na(df2[,1]))),]}
+    
+    
+    dfs_raw[[i]]<-df
+    dfs_nas[[i]]<-df[which(is.na(df$basins)),]
+    dfs_filtered[[i]]<-df2
+    
+  }
+  
+  for (i in 1:length(filenames)){
+    colnames(dfs_filtered[[i]])<-c("basins",paste0("K2P",i))
+  }
+  
+  if (length(filenames)==1){
+    dfs_filtered[[1]]->df_merge
+  }
+  
+  if (length(filenames)>1){
+    full_join(dfs_filtered[[1]],dfs_filtered[[2]])->df_merge
+  }
+  
+  if (length(filenames)>2) {
+    for (i in 3:length(filenames)){
+      full_join(df_merge,dfs_filtered[[i]])->df_merge}
+  }
+  
+  colnames(df_merge)->colnames(df_tot)
+  rbind(df_tot,df_merge)->df_tot2
+  
+  ################ POUR VERIFIER ##########
+  
+  #Always check those four lines manually to remove unwanted NAs when you plot new species
+  #dfs_nas[[1]]
+  #dfs_nas[[2]]
+  #dfs_nas[[3]]
+  #length(which(is.na(df_tot2)==T))
+  
+  #If the NA is from a sample from the same region or itself, just replace it by 0. If not,
+  #need to find another solution
+  df_tot2
+  df_tot2[is.na(df_tot2)] = 0
+  
+  df_tot2
+  length(which(is.na(df_tot2)==T))
+  
+  
+  #dfs_filtered[[1]]
+  #dfs_filtered[[2]]
+  #dfs_filtered[[3]]
+  
+  
+  #View(dfs_raw[[1]])
+  #View(dfs_raw[[2]])
+  #View(dfs_raw[[3]])
+  
+  
+  #enregistrer la table avec gradient de couleur pour West/Est
+  WE_scale<-seq(0,0,length=(length(rownames(df_tot2))))
+  cbind(df_tot2,WE_scale)->df_tot2
+  df_tot2$WE_scale[which(df_tot2$basins=="Colombia")]<-1
+  df_tot2$WE_scale[which(df_tot2$basins=="West Guyana")]<-2
+  df_tot2$WE_scale[which(df_tot2$basins=="Essequibo")]<-3
+  df_tot2$WE_scale[which(df_tot2$basins=="East Guyana")]<-3
+  df_tot2$WE_scale[which(df_tot2$basins=="Corantijn")]<-4
+  df_tot2$WE_scale[which(df_tot2$basins=="Nickerie")]<-5
+  df_tot2$WE_scale[which(df_tot2$basins=="Coppename")]<-6
+  df_tot2$WE_scale[which(df_tot2$basins=="Saramacca")]<-7
+  df_tot2$WE_scale[which(df_tot2$basins=="Country_Suriname")]<-7
+  df_tot2$WE_scale[which(df_tot2$basins=="Suriname")]<-8
+  df_tot2$WE_scale[which(df_tot2$basins=="Commewijne")]<-9
+  df_tot2$WE_scale[which(df_tot2$basins=="West Maroni")]<-10
+  df_tot2$WE_scale[which(df_tot2$basins=="North Maroni")]<-11
+  df_tot2$WE_scale[which(df_tot2$basins=="French_Guiana")]<-11
+  df_tot2$WE_scale[which(df_tot2$basins=="East Maroni")]<-12
+  df_tot2$WE_scale[which(df_tot2$basins=="Mana")]<-13
+  df_tot2$WE_scale[which(df_tot2$basins=="Iracoubo")]<-14
+  df_tot2$WE_scale[which(df_tot2$basins=="Sinnamary")]<-15
+  df_tot2$WE_scale[which(df_tot2$basins=="Kourou")]<-16
+  df_tot2$WE_scale[which(df_tot2$basins=="Comte Orapu")]<-17
+  df_tot2$WE_scale[which(df_tot2$basins=="Approuague Kaw")]<-18
+  df_tot2$WE_scale[which(df_tot2$basins=="Oyapock")]<-19
+  df_tot2$WE_scale[which(df_tot2$basins=="Brazil")]<-20
+  df_tot2$WE_scale[which(df_tot2$basins=="Argentina")]<-21
+  
+  
+  ####save_excel_df####
+  df_tot2[order(df_tot2$WE_scale),]->df_tot2
+  write.csv(df_tot2,file=paste0("basins_total_table_",species))
+  all_dftot2[[isp]]<-df_tot2
+  names(all_dftot2)<-species_names
+  
+  
+  #préparer la table pour heatmap et PCA
+  
+  as.data.frame(t(df_tot2),stringsAsFactors = F)->pca_table
+  colnames(pca_table)<-pca_table[1,]
+  pca_table[-c(1,length(rownames(pca_table))),]->pca_table
+  
+  pca_table$Region->regions
+  if(length(which(regions=="West"))>1){
+    for (i in 2:length(which(regions=="West"))){
+      paste("West",i,sep="")->pca_table$Region[(which(regions=="West")[i])]
+    }}
+  if(length(which(regions=="North"))>1){
+    for (i in 2:length(which(regions=="North"))){
+      paste("North",i,sep="")->pca_table$Region[(which(regions=="North")[i])]
+    }}
+  
+  if(length(which(regions=="East"))>1){
+    for (i in 2:length(which(regions=="East"))){
+      paste("East",i,sep="")->pca_table$Region[(which(regions=="East")[i])]
+    }}
+  rownames(pca_table)<-pca_table[,1]
+  pca_table[,-1]->pca_table
+  
+  pca_table2 <- as.data.frame(sapply(pca_table[,-c(1:3)], as.numeric)) 
+  rownames(pca_table2)<-rownames(pca_table)
+  
+  heat_cols<-c("darkblue","blue","deepskyblue","darkturquoise","green","yellow","orange","orangered","red","firebrick") #colors for figures
+  
+  library(ggplot2)
+  library(reshape2)
+  cbind(pca_table2,Haplotype=(rownames(pca_table2)))->heatmap
+  melt(heatmap)->heatmap
+  colnames(heatmap)<-c("Haplotypes","Basins","K2P")
+  plot<-ggplot(data=heatmap,
+               aes(x=Basins, y=Haplotypes, fill=K2P)) + geom_tile() + 
+    geom_text(aes(label=round(K2P,digits=4)), color='black',size=3) + theme_bw()+
+    ggtitle(gsub("_"," ",species))+scale_fill_gradientn(colours = heat_cols)+
+    theme(plot.title = element_text(hjust=0.5))+
+    theme(axis.text.x = element_text(angle = 90,hjust=1))
+  plot
+  
+  pdf(paste0("heatmap_basins_",species,".pdf"))
+  print(plot)
+  dev.off()
+  tiff(paste0("heatmap_basins_",species,".tiff"))
+  print(plot)
+  dev.off()
+  
+  setwd("E:/BARCODE_MARONI/200416_YP/basins_comp_all/1_total_outputs/basins_plots_and_maps/")
+  pdf(paste0("heatmap_basins_",species,".pdf"))
+  print(plot)
+  dev.off()
+  tiff(paste0("heatmap_basins_",species,".tiff"))
+  print(plot)
+  dev.off()
+  setwd("E:/BARCODE_MARONI/200416_YP/basins_comp_all/")
+  setwd(species)
+  
+  
+  ####save heatmap for later ####
+  as.factor(paste0(species,"_",heatmap$Haplotypes))->heatmap$Haplotypes
+  rbind(all_heatmaps,heatmap)->all_heatmaps
+  
+  
+  
+  #Faire la PCA
+  ####save pca for later ####
+  1-pca_table2->pca_table2
+  
+  
+  require(ade4)
+  pca<-dudi.pca(pca_table2, center=T, scale=F, scannf = F)
+  pca
+  
+  #test:
+  #s.label(pca$li,1,2)
+  
+  #create dummy axes if needed
+  if (length(pca$li)==1){
+    pca$li$Axis2<-seq(0,0,length=length(rownames(pca$li)))
+    pca$co$Comp2<-seq(0,0,length=length(rownames(pca$co)))}
+  
+  s.label(pca$li,1,2)
+  
+  library(ggplot2)
+  library(ggrepel)
+  
+  #set colors for basins
+  colfunc <- colorRampPalette(c("green","blue","purple"))
+  colfunc(21)->total_scale_colors
+  total_scale_colors[df_tot2$WE_scale[-c(1:4)]]->WE_grad
+  
+  #calculate projected inertia
+  if(length(pca$eig)>1){
+    axis1<-pca$eig[1]/sum(pca$eig)*100
+    axis1<-paste0("Axis 1: ",round(axis1,digits=2),"%")
+    axis2<-pca$eig[2]/sum(pca$eig)*100
+    axis2<-paste0("Axis 2: ",round(axis2,digits=2),"%")
+  }
+  
+  if(length(pca$eig)==1){
+    axis1<-"Axis 1: 100%"
+    axis2<-"Axis 2: 0%"
+  }
+  
+  
+  ####sample_colors####
+  samples_colors<-c()
+  samples_colors[which(regions=="West")]<-"red"
+  samples_colors[which(regions=="North")]<-"blue"
+  samples_colors[which(regions=="East")]<-"darkgreen"
+  
+  ####basins_colors####
+  basins_regions<-c()
+  basins_regions[which(rownames(pca$co)=="Colombia")]<-"Other"
+  basins_regions[which(rownames(pca$co)=="West Guyana")]<-"West"
+  basins_regions[which(rownames(pca$co)=="Essequibo")]<-"West"
+  basins_regions[which(rownames(pca$co)=="East Guyana")]<-"West"
+  basins_regions[which(rownames(pca$co)=="Corantijn")]<-"West"
+  basins_regions[which(rownames(pca$co)=="Nickerie")]<-"West"
+  basins_regions[which(rownames(pca$co)=="Coppename")]<-"West"
+  basins_regions[which(rownames(pca$co)=="Saramacca")]<-"West"
+  basins_regions[which(rownames(pca$co)=="Country_Suriname")]<-"West"
+  basins_regions[which(rownames(pca$co)=="Suriname")]<-"West"
+  basins_regions[which(rownames(pca$co)=="Commewijne")]<-"West"
+  basins_regions[which(rownames(pca$co)=="West Maroni")]<-"West"
+  basins_regions[which(rownames(pca$co)=="North Maroni")]<-"North Maroni"
+  basins_regions[which(rownames(pca$co)=="French_Guiana")]<-"FG unknown"
+  basins_regions[which(rownames(pca$co)=="East Maroni")]<-"East"
+  basins_regions[which(rownames(pca$co)=="Mana")]<-"East"
+  basins_regions[which(rownames(pca$co)=="Iracoubo")]<-"East"
+  basins_regions[which(rownames(pca$co)=="Sinnamary")]<-"East"
+  basins_regions[which(rownames(pca$co)=="Kourou")]<-"East"
+  basins_regions[which(rownames(pca$co)=="Comte Orapu")]<-"East"
+  basins_regions[which(rownames(pca$co)=="Approuague Kaw")]<-"East"
+  basins_regions[which(rownames(pca$co)=="Oyapock")]<-"East"
+  basins_regions[which(rownames(pca$co)=="Brazil")]<-"Other"
+  basins_regions[which(rownames(pca$co)=="Argentina")]<-"Other"
+  as.factor(basins_regions)->basins_regions
+  
+  #basins_colors<-c()
+  #basins_colors[which(basins_regions=="Other")]<-"black"
+  #basins_colors[which(basins_regions=="West")]<-"red"
+  #basins_colors[which(basins_regions=="North Maroni")]<-"blue"
+  #basins_colors[which(basins_regions=="FG unknown")]<-"turquoise"
+  #basins_colors[which(basins_regions=="East")]<-"green"
+  basins_colors<-c("Other"="black","West"="red",
+                  "North Maroni"="blue","FG unknown"="turquoise","East"="darkgreen")
+  
+  #df_tot2$WE_scale[-c(1:4)]->WE_grad
+  #total_scale_colors
+  
+  plot <- ggplot(data=pca$li,aes(x=Axis1, y=Axis2))+geom_hline(yintercept=0,
+                                                               col="darkgrey")+
+    geom_vline(xintercept=0, col="darkgrey")+geom_point()+
+    geom_text_repel(aes(label=rownames(pca$li)),show.legend = FALSE,
+                    size=5,col=samples_colors)+
+    theme_bw()+
+    geom_text_repel(data=pca$co,size=4,aes(x=Comp1, y=Comp2,label=rownames(pca$co),
+                                           col=basins_regions))+
+    xlab(axis1)+ylab(axis2)+ggtitle(gsub("_"," ",species))+
+    theme(plot.title = element_text(hjust=0.5))+
+    scale_colour_manual(values=basins_colors)
+  
+  #scale_colour_gradientn(colors=total_scale_colors,limits=c(1,21),breaks=c(1,11,21),
+  #labels=c("West","Center","East"),name=NULL)+
+  #df_tot2$WE_scale[-c(1:4)]
+  plot
+  
+  pdf(paste0("pca_basins_",species,".pdf"))
+  print(plot)
+  dev.off()
+  tiff(paste0("pca_basins_",species,".tiff"))
+  print(plot)
+  dev.off()
+  
+  setwd("E:/BARCODE_MARONI/200416_YP/basins_comp_all/1_total_outputs/basins_plots_and_maps/")
+  pdf(paste0("pca_basins_",species,".pdf"))
+  print(plot)
+  dev.off()
+  tiff(paste0("pca_basins_",species,".tiff"))
+  print(plot)
+  dev.off()
+  setwd("E:/BARCODE_MARONI/200416_YP/basins_comp_all/")
+  setwd(species)
+  
+  
+  paste0(isp,rownames(pca_table2))->ID
+  cbind(ID,pca_table2)->pca_table2
+  pca_table2->all_pca_table2[[isp]]
+  
+  
+  if (isp==2){
+    full_join(all_pca_table2[[1]],pca_table2)->total_pca_table
+  }
+  
+  if (isp>2){
+    full_join(total_pca_table,pca_table2)->total_pca_table
+  }
+}
+
+
+################### PLOT TOTAL HEATMAP ############
+setwd("E:/BARCODE_MARONI/200416_YP/basins_comp_all/1_total_outputs")
+all_heatmaps->heatmap
+plot<-ggplot(data=heatmap,
+             aes(x=Basins, y=Haplotypes, fill=K2P)) + geom_tile() + 
+  geom_text(aes(label=round(K2P,digits=4)), color='black',size=0.7) + theme_bw()+
+  ggtitle("Heatmap All Species")+scale_fill_gradientn(colours = heat_cols)+
+  theme(plot.title = element_text(hjust=0.5))+
+  theme(axis.text.x = element_text(angle = 90,hjust=1,size=5),
+        axis.text.y=element_text(size=3))
+
+plot
+
+#dev.new(width=4,height=10,unit="in",noRStudioGD = T)dev.new(width=2,height=10,unit="in",noRStudioGD = T)
+pdf(paste0("heatmap_basins_total.pdf"),width=4,height=10)
+print(plot)
+dev.off()
+tiff(paste0("heatmap_basins.tiff"),width=4,height=10,res=350,units="in")
+print(plot)
+dev.off()
+
+################### PLOT TOTAL PCA ############
+
+total_pca_table->pca_table2
+pca_table2$ID->rownames(pca_table2)
+pca_table2[,-1]->pca_table2
+
+library("missMDA")
+estim<-estim_ncpPCA(pca_table2, ncp.min = 0, ncp.max = 5)
+imputePCA(pca_table2,ncp=3)->imputeNA
+#Here we forced 3 axes. former was ncp=estim$ncp, and it was 2
+as.data.frame(imputeNA$completeObs)->pca_table3
+
+require(ade4)
+pca<-dudi.pca(pca_table3, center=T, scale=F, scannf = F,nf=3)
+pca
+
+#test:
+s.label(pca$li,1,2)
+
+#create dummy axes if needed
+if (length(pca$li)==1){
+  pca$li$Axis2<-seq(0,0,length=length(rownames(pca$li)))
+  pca$co$Comp2<-seq(0,0,length=length(rownames(pca$co)))}
+
+s.label(pca$li,1,2)
+
+library(ggplot2)
+library(ggrepel)
+
+#calculate projected inertia
+if(length(pca$eig)>1){
+  axis1<-pca$eig[1]/sum(pca$eig)*100
+  axis1<-paste0("Axis 1: ",round(axis1,digits=2),"%")
+  axis2<-pca$eig[2]/sum(pca$eig)*100
+  axis2<-paste0("Axis 2: ",round(axis2,digits=2),"%")
+  axis3<-pca$eig[3]/sum(pca$eig)*100
+  axis3<-paste0("Axis 3: ",round(axis3,digits=2),"%")
+}
+
+if(length(pca$eig)==1){
+  axis1<-"Axis 1: 100%"
+  axis2<-"Axis 2: 0%"
+}
+
+df_tot2$WE_scale[-c(1:4)]->WE_grad
+total_scale_colors
+#enregistrer la table avec gradient de couleur pour West/Est
+WE_scale<-seq(0,0,length=(length(pca_table3)))
+WE_scale[which(colnames(pca_table3)=="Colombia")]<-1
+WE_scale[which(colnames(pca_table3)=="West Guyana")]<-2
+WE_scale[which(colnames(pca_table3)=="Essequibo")]<-3
+WE_scale[which(colnames(pca_table3)=="East Guyana")]<-3
+WE_scale[which(colnames(pca_table3)=="Corantijn")]<-4
+WE_scale[which(colnames(pca_table3)=="Nickerie")]<-5
+WE_scale[which(colnames(pca_table3)=="Coppename")]<-6
+WE_scale[which(colnames(pca_table3)=="Saramacca")]<-7
+WE_scale[which(colnames(pca_table3)=="Country_Suriname")]<-7
+WE_scale[which(colnames(pca_table3)=="Suriname")]<-8
+WE_scale[which(colnames(pca_table3)=="Commewijne")]<-9
+WE_scale[which(colnames(pca_table3)=="West Maroni")]<-10
+WE_scale[which(colnames(pca_table3)=="North Maroni")]<-11
+WE_scale[which(colnames(pca_table3)=="French_Guiana")]<-11
+WE_scale[which(colnames(pca_table3)=="East Maroni")]<-12
+WE_scale[which(colnames(pca_table3)=="Mana")]<-13
+WE_scale[which(colnames(pca_table3)=="Iracoubo")]<-14
+WE_scale[which(colnames(pca_table3)=="Sinnamary")]<-15
+WE_scale[which(colnames(pca_table3)=="Kourou")]<-16
+WE_scale[which(colnames(pca_table3)=="Comte Orapu")]<-17
+WE_scale[which(colnames(pca_table3)=="Approuague Kaw")]<-18
+WE_scale[which(colnames(pca_table3)=="Oyapock")]<-19
+WE_scale[which(colnames(pca_table3)=="Brazil")]<-20
+WE_scale[which(colnames(pca_table3)=="Argentina")]<-21
+
+####sample_colors####
+samples_colors<-c()
+samples_colors[grep("West",rownames(pca$li))]<-"red"
+samples_colors[grep("North",rownames(pca$li))]<-"blue"
+samples_colors[grep("East",rownames(pca$li))]<-"darkgreen"
+
+####basins_colors####
+basins_regions<-c()
+basins_regions[which(rownames(pca$co)=="Colombia")]<-"Other"
+basins_regions[which(rownames(pca$co)=="West Guyana")]<-"West"
+basins_regions[which(rownames(pca$co)=="Essequibo")]<-"West"
+basins_regions[which(rownames(pca$co)=="East Guyana")]<-"West"
+basins_regions[which(rownames(pca$co)=="Corantijn")]<-"West"
+basins_regions[which(rownames(pca$co)=="Nickerie")]<-"West"
+basins_regions[which(rownames(pca$co)=="Coppename")]<-"West"
+basins_regions[which(rownames(pca$co)=="Saramacca")]<-"West"
+basins_regions[which(rownames(pca$co)=="Country_Suriname")]<-"West"
+basins_regions[which(rownames(pca$co)=="Suriname")]<-"West"
+basins_regions[which(rownames(pca$co)=="Commewijne")]<-"West"
+basins_regions[which(rownames(pca$co)=="West Maroni")]<-"West"
+basins_regions[which(rownames(pca$co)=="North Maroni")]<-"North Maroni"
+basins_regions[which(rownames(pca$co)=="French_Guiana")]<-"FG unknown"
+basins_regions[which(rownames(pca$co)=="East Maroni")]<-"East"
+basins_regions[which(rownames(pca$co)=="Mana")]<-"East"
+basins_regions[which(rownames(pca$co)=="Iracoubo")]<-"East"
+basins_regions[which(rownames(pca$co)=="Sinnamary")]<-"East"
+basins_regions[which(rownames(pca$co)=="Kourou")]<-"East"
+basins_regions[which(rownames(pca$co)=="Comte Orapu")]<-"East"
+basins_regions[which(rownames(pca$co)=="Approuague Kaw")]<-"East"
+basins_regions[which(rownames(pca$co)=="Oyapock")]<-"East"
+basins_regions[which(rownames(pca$co)=="Brazil")]<-"Other"
+basins_regions[which(rownames(pca$co)=="Argentina")]<-"Other"
+as.factor(basins_regions)->basins_regions
+
+basins_colors<-c("Other"="black","West"="red",
+                 "North Maroni"="blue","FG unknown"="turquoise","East"="darkgreen")
+
+#Axis 1 and 2 text
+plot1 <- ggplot(data=pca$li,aes(x=Axis1, y=Axis2))+
+  geom_hline(yintercept=0, col="darkgrey")+
+  geom_vline(xintercept=0, col="darkgrey")+geom_point()+
+  geom_text_repel(aes(label=rownames(pca$li)),
+                  show.legend = FALSE,size=5,col=samples_colors)+
+  theme_bw()+
+  scale_colour_manual(values=basins_colors)+
+  geom_text_repel(data=pca$co,size=4,aes(x=Comp1, y=Comp2,label=rownames(pca$co),
+                                         col=basins_regions))+
+  xlab(axis1)+ylab(axis2) + 
+  theme(plot.title = element_text(hjust=0.5))
+
+
+plot1
+pdf(paste0("pca_basins1.pdf"))
+print(plot1)
+dev.off()
+tiff(paste0("pca_basins1.tiff"))
+print(plot1)
+dev.off()
+
+#Axes 1 and 2 points
+plot2 <- ggplot(data=pca$li,aes(x=Axis1, y=Axis2))+
+  geom_hline(yintercept=0, col="darkgrey")+
+  geom_vline(xintercept=0, col="darkgrey")+
+  geom_point(show.legend = FALSE,size=2,fill=samples_colors,shape=21)+
+  theme_bw()+
+  scale_fill_manual(values=basins_colors)+
+  geom_point(data=pca$co,size=2,shape=24,aes(x=Comp1, y=Comp2,
+                                             fill=basins_regions))+
+  xlab(axis1)+ylab(axis2) + 
+  theme(plot.title = element_text(hjust=0.5))
+
+#df_tot2$WE_scale[-c(1:4)]
+plot2
+
+pdf(paste0("pca_basins2.pdf"))
+print(plot2)
+dev.off()
+tiff(paste0("pca_basins2.tiff"))
+print(plot2)
+dev.off()
+
+#Axes 1 and 2 text basins
+plot3 <- ggplot(data=pca$li,aes(x=Axis1, y=Axis2))+
+  geom_hline(yintercept=0, col="darkgrey")+
+  geom_vline(xintercept=0, col="darkgrey")+
+  geom_point(show.legend = FALSE,size=2,fill=samples_colors,shape=21)+
+  theme_bw()+
+  scale_colour_manual(values=basins_colors)+
+  geom_text_repel(data=pca$co,size=4,aes(x=Comp1, y=Comp2,label=rownames(pca$co),
+                                         col=basins_regions))+
+  xlab(axis1)+ylab(axis2) + 
+  theme(plot.title = element_text(hjust=0.5))
+
+#df_tot2$WE_scale[-c(1:4)]
+plot3
+
+pdf(paste0("pca_basins3.pdf"))
+print(plot3)
+dev.off()
+tiff(paste0("pca_basins3.tiff"))
+print(plot3)
+dev.off()
+
+#Axis 2 and 3 text
+plot4 <- ggplot(data=pca$li,aes(x=Axis2, y=Axis3))+
+  geom_hline(yintercept=0, col="darkgrey")+
+  geom_vline(xintercept=0, col="darkgrey")+geom_point()+
+  geom_text_repel(aes(label=rownames(pca$li)),
+                  show.legend = FALSE,size=5,col=samples_colors)+
+  theme_bw()+
+  scale_colour_manual(values=basins_colors)+
+  geom_text_repel(data=pca$co,size=4,aes(x=Comp1, y=Comp2,label=rownames(pca$co),
+                                         col=basins_regions))+
+  xlab(axis2)+ylab(axis3) + 
+  theme(plot.title = element_text(hjust=0.5))
+
+#df_tot2$WE_scale[-c(1:4)]
+plot4
+pdf(paste0("pca_basins4.pdf"))
+print(plot4)
+dev.off()
+tiff(paste0("pca_basins4.tiff"))
+print(plot4)
+dev.off()
+
+#Axis 2 and 3 points
+plot5 <- ggplot(data=pca$li,aes(x=Axis2, y=Axis3))+
+  geom_hline(yintercept=0, col="darkgrey")+
+  geom_vline(xintercept=0, col="darkgrey")+
+  geom_point(show.legend = FALSE,size=2,fill=samples_colors,shape=21)+
+  theme_bw()+
+  scale_fill_manual(values=basins_colors)+
+  geom_point(data=pca$co,size=2,shape=24,aes(x=Comp1, y=Comp2,
+                                            fill=basins_regions))+
+  xlab(axis2)+ylab(axis3) + 
+  theme(plot.title = element_text(hjust=0.5))
+
+#df_tot2$WE_scale[-c(1:4)]
+plot5
+
+pdf(paste0("pca_basins5.pdf"))
+print(plot5)
+dev.off()
+tiff(paste0("pca_basins5.tiff"))
+print(plot5)
+dev.off()
+
+#Axis 2 and 3 basins text
+plot6 <- ggplot(data=pca$li,aes(x=Axis2, y=Axis3))+
+  geom_hline(yintercept=0, col="darkgrey")+
+  geom_vline(xintercept=0, col="darkgrey")+
+  geom_point(show.legend = FALSE,size=2,fill=samples_colors,shape=21)+
+  theme_bw()+
+  scale_colour_manual(values=basins_colors)+
+  geom_text_repel(data=pca$co,size=4,aes(x=Comp1, y=Comp2,label=rownames(pca$co),
+                                         col=basins_regions))+
+  xlab(axis2)+ylab(axis3) + 
+  theme(plot.title = element_text(hjust=0.5))
+
+#
+plot6
+
+pdf(paste0("pca_basins6.pdf"))
+print(plot6)
+dev.off()
+tiff(paste0("pca_basins6.tiff"))
+print(plot6)
+dev.off()
+
+
+#A
+plot7 <- ggplot(data=pca$li,aes(x=Axis1, y=Axis2))+
+  geom_hline(yintercept=0, col="darkgrey")+
+  geom_vline(xintercept=0, col="darkgrey")+
+  geom_point(show.legend = FALSE,size=2,fill=samples_colors,shape=21)+
+  theme_bw()+
+  scale_colour_manual(values=basins_colors)+
+  geom_text_repel(data=pca$co,size=4,aes(x=Comp1, y=Comp2,label=rownames(pca$co),
+                                         col=basins_regions))+
+  xlab(axis1)+ylab(axis2) + 
+  theme(plot.title = element_text(hjust=0.5))+
+  coord_cartesian(xlim = c(-0.1, 0.1),ylim=c(-0.2,0.2)) 
+
+#df_tot2$WE_scale[-c(1:4)]
+plot7
+pdf(paste0("pca_basins7.pdf"))
+print(plot7)
+dev.off()
+tiff(paste0("pca_basins7.tiff"))
+print(plot7)
+dev.off()
+
+#Axes 2 and 3 zoom
+plot8 <- ggplot(data=pca$li,aes(x=Axis2, y=Axis3))+
+  geom_hline(yintercept=0, col="darkgrey")+
+  geom_vline(xintercept=0, col="darkgrey")+
+  geom_point(show.legend = FALSE,size=2,fill=samples_colors,shape=21)+
+  theme_bw()+
+  scale_colour_manual(values=basins_colors)+
+  geom_text_repel(data=pca$co,size=4,aes(x=Comp2, y=Comp3,label=rownames(pca$co),
+                                         col=basins_regions))+
+  xlab(axis2)+ylab(axis3) + 
+  theme(plot.title = element_text(hjust=0.5))+
+  coord_cartesian(xlim = c(-0.1, 0.1),ylim=c(-0.2,0.2)) 
+
+#df_tot2$WE_scale[-c(1:4)]
+plot8
+
+pdf(paste0("pca_basins8.pdf"))
+print(plot8)
+dev.off()
+tiff(paste0("pca_basins8.tiff"))
+print(plot8)
+dev.off()
+
+
+#variables only
+#Axis 1 and 2
+plot9 <- ggplot(data=pca$co,aes(x=Comp1, y=Comp2,col=basins_regions))+
+  geom_hline(yintercept=0, col="darkgrey")+
+  geom_vline(xintercept=0, col="darkgrey")+
+  theme_bw()+geom_label(aes(label=rownames(pca$co)))+
+  scale_colour_manual(values=basins_colors)+
+  xlab(axis1)+ylab(axis2) + 
+  theme(plot.title = element_text(hjust=0.5))
+
+pdf(paste0("pca_basins9_variables_only.pdf"))
+print(plot9)
+dev.off()
+tiff(paste0("pca_basins9_variables_only.tiff"))
+print(plot9)
+dev.off()
+
+#variables only_zoom
+#Axes 1 and 2
+plot10 <- ggplot(data=pca$co,aes(x=Comp1, y=Comp2,col=basins_regions))+
+  geom_hline(yintercept=0, col="darkgrey")+
+  geom_vline(xintercept=0, col="darkgrey")+
+  theme_bw()+geom_label_repel(aes(label=rownames(pca$co)))+
+  scale_colour_manual(values=basins_colors)+
+  xlab(axis1)+ylab(axis2) + 
+  theme(plot.title = element_text(hjust=0.5))+
+  coord_cartesian(xlim = c(-0.045, 0.04),ylim=c(-0.026,0.015)) 
+
+pdf(paste0("pca_basins10_variables_only_zoom.pdf"))
+print(plot10)
+dev.off()
+tiff(paste0("pca_basins10_variables_only_zoom.tiff"),res=350,width=8,height=5,units="in")
+print(plot10)
+dev.off()
+
+#variables only
+#Axis 2 and 3 
+plot11 <- ggplot(data=pca$co,aes(x=Comp2, y=Comp3,col=basins_regions))+
+  geom_hline(yintercept=0, col="darkgrey")+
+  geom_vline(xintercept=0, col="darkgrey")+
+  theme_bw()+geom_label(aes(label=rownames(pca$co)))+
+  scale_colour_manual(values=basins_colors)+
+  xlab(axis2)+ylab(axis3) + 
+  theme(plot.title = element_text(hjust=0.5))
+
+pdf(paste0("pca_basins11_variables_only.pdf"))
+print(plot11)
+dev.off()
+tiff(paste0("pca_basins11_variables_only.tiff"))
+print(plot11)
+dev.off()
+
+#variables only_zoom
+#Axis 2 and 3 text
+plot12 <- ggplot(data=pca$co,aes(x=Comp2, y=Comp3,col=basins_regions))+
+  geom_hline(yintercept=0, col="darkgrey")+
+  geom_vline(xintercept=0, col="darkgrey")+
+  theme_bw()+geom_label_repel(aes(label=rownames(pca$co)))+
+  scale_colour_manual(values=basins_colors)+
+  xlab(axis2)+ylab(axis3) + 
+  theme(plot.title = element_text(hjust=0.5))+
+  coord_cartesian(xlim = c(-0.03, 0.014),ylim=c(-0.007,0.02)) 
+
+pdf(paste0("pca_basins12_variables_only_zoom.pdf"))
+print(plot12)
+dev.off()
+tiff(paste0("pca_basins12_variables_only_zoom.tiff"),res=350,width=8,height=5,units="in")
+print(plot12)
+dev.off()
+
+####NO FAR COUNTRIES####
+library(dplyr)
+library(readxl)
+
+setwd("E:/BARCODE_MARONI/200416_YP/basins_comp_all_nofarcountries/")
+list.files()->all_species
+all_species[-grep("output",all_species)]->all_species
+list()->all_dftot2
+list()->all_pca_table2
+data.frame(Haplotypes=factor(),Basins=factor(),K2P=numeric())->all_heatmaps
+
+
+for (isp in 1:length(all_species)){
+  #  isp<-2
+  #for (isp in c(1:22)){
+  
+  
+  species<-all_species[isp]
+  species_names<-c()
+  species_names<-c(species_names,species)
+  setwd("E:/BARCODE_MARONI/200416_YP/basins_comp_all_nofarcountries/")
+  setwd(species)
+  
+  filenames<-c()
+  list.files()->files
+  toMatch <- c("West_G", "North_G", "East_G")
+  matches<-unique(grep(paste(toMatch,collapse="|"),files, value=TRUE))
+  
+  for (i in 1:length(matches)){
+    filenames[i]<-matches[i]
+  }
+  
+  col1<-c("Region","Sample ID","Sequence ID","Location")
+  
+  cols<-list()
+  for (i in 1:length(filenames)){
+    cols[[i]]<-c(strsplit(filenames[i],"_")[[1]][1],strsplit(filenames[i],"_")[[1]][4],strsplit(filenames[i],"_")[[1]][2],strsplit(filenames[i],"_")[[1]][9])
+  }
+  
+  df_tot<- data.frame(t(matrix(unlist(cols), nrow=length(cols), byrow=T)),stringsAsFactors=FALSE)
+  df_tot<- cbind(col1,df_tot)
+  
+  list()->dfs_raw
+  list()->dfs_nas
+  list()->dfs_filtered
+  
+  for (i in 1:length(filenames)) {
+    
+    df <- read.csv(filenames[i], header=T,sep="\t",stringsAsFactors=FALSE)
+    
+    #if table is comma separated instead of tab separated
+    if (length(df)==1){
+      rm(df)
+      df <- read.csv(filenames[i], header=T,sep=",",stringsAsFactors=FALSE)
+    }
+    
+    #REMOVE THE DUPLICATE OF THE SAME SEQUENCE
+    which(df$SampleID==df_tot[2,i+1])
+    df<-df[-(which(df$SampleID==df_tot[2,i+1])),]
+    
+    df[,11] <- NA
+    colnames(df)[11]<-'basins'
+    
+    df[grep("Suriname",df$Country),11]<-"Country_Suriname"
+    df[grep("French Guiana",df$Country),11]<-"French_Guiana"
+    df[grep("Colombia",df$Country),11]<-"Colombia"
+    df[grep("Barima-Waini",df$Province),11]<-"West Guyana"
+    df[grep("Berbice",df$Province),11]<-"West Guyana"
+    df[grep("Takutu",df$Region),11]<-"East Guyana"
+    df[grep("Essequibo",df$Sector),11]<-"Essequibo"
+    df[grep("Essequibo",df$Region),11]<-"Essequibo"
+    df[grep("Corantijn",df$Sector),11]<-"Corantijn"
+    df[grep("Corantijn",df$Region),11]<-"Corantijn"
+    df[grep("Gran Rio",df$Sector),11]<-"Corantijn"
+    df[grep("Nickerie",df$Sector),11]<-"Nickerie"
+    df[grep("Coppename",df$Sector),11]<-"Coppename"
+    df[grep("Coppename",df$Region),11]<-"Coppename"
+    df[grep("Saramacca",df$Sector),11]<-"Saramacca"
+    df[grep("Suriname",df$Sector),11]<-"Suriname"
+    df[grep("Suriname River",df$Region),11]<-"Suriname"
+    df[grep("Commewij",df$Sector),11]<-"Commewijne"
+    df[grep("Palomeu",df$Exact.Site),11]<-"West Maroni"
+    df[grep("Paloemeu",df$Exact.Site),11]<-"West Maroni"
+    df[grep("Paloemeu",df$Sector),11]<-"West Maroni"
+    df[grep("Tapanahony",df$Exact.Site),11]<-"West Maroni"
+    df[grep("Tapanahony",df$Sector),11]<-"West Maroni"
+    df[grep("Wayu Camp",df$Exact.Site),11]<-"West Maroni"
+    df[grep("Weyu Camp",df$Exact.Site),11]<-"West Maroni"
+    df[grep("Wawapsi",df$Exact.Site),11]<-"West Maroni"
+    df[grep("Balate",df$Exact.Site),11]<-"North Maroni"
+    df[grep("Tupo Creek",df$Exact.Site),11]<-"North Maroni"
+    df[grep("Crique Tupo",df$Exact.Site),11]<-"North Maroni"
+    df[grep("Crique Cascades",df$Exact.Site),11]<-"North Maroni"
+    df[grep("Cascades Creek",df$Exact.Site),11]<-"North Maroni"
+    df[grep("Creek Cascades",df$Exact.Site),11]<-"North Maroni"
+    df[grep("Balat",df$Exact.Site),11]<-"North Maroni"
+    df[grep("Serpent",df$Exact.Site),11]<-"North Maroni"
+    df[grep("Nassau",df$Exact.Site),11]<-"North Maroni"
+    df[grep("Balate",df$Exact.Site),11]<-"North Maroni"
+    df[grep("Voltaire",df$Exact.Site),11]<-"North Maroni"
+    df[grep("Beiman",df$Exact.Site),11]<-"North Maroni"
+    df[grep("Sparouine",df$Exact.Site),11]<-"North Maroni"
+    df[grep("Beiman",df$Sector),11]<-"North Maroni"
+    df[grep("Maripasoula",df$Region),11]<-"East Maroni"
+    df[grep("Langa Soula",df$Exact.Site),11]<-"East Maroni"
+    df[grep("Langa Sula",df$Exact.Site),11]<-"East Maroni"
+    df[grep("Longa Soula",df$Exact.Site),11]<-"East Maroni"
+    df[grep("Saut Wayo",df$Exact.Site),11]<-"East Maroni"
+    df[grep("Cayode",df$Exact.Site),11]<-"East Maroni"
+    df[grep("Antecume",df$Exact.Site),11]<-"East Maroni"
+    df[grep("Lawa",df$Sector),11]<-"East Maroni"
+    df[grep("Lawa",df$Exact.Site),11]<-"East Maroni"
+    df[grep("Litany",df$Exact.Site),11]<-"East Maroni"
+    df[grep("Litany",df$Sector),11]<-"East Maroni"
+    df[grep("Mana River",df$Sector),11]<-"Mana"
+    df[grep("Mana River",df$Region),11]<-"Mana"
+    df[grep("Iracoubo",df$Sector),11]<-"Iracoubo"
+    df[grep("Sinnamary",df$Sector),11]<-"Sinnamary"
+    df[grep("Sinnamary",df$Region),11]<-"Sinnamary"
+    df[grep("Kourou",df$Sector),11]<-"Kourou"
+    df[grep("Comt",df$Sector),11]<-"Comte Orapu"
+    df[grep("Comt",df$Exact.Site),11]<-"Comte Orapu"
+    df[grep("Orapu",df$Sector),11]<-"Comte Orapu"
+    df[grep("Mahury",df$Sector),11]<-"Comte Orapu"
+    df[grep("Approuague",df$Sector),11]<-"Approuague Kaw"
+    df[grep("Approuague",df$Region),11]<-"Approuague Kaw"
+    df[grep("Aratai",df$Sector),11]<-"Approuague Kaw"
+    df[grep("\\bKaw\\b",df$Sector),11]<-"Approuague Kaw"
+    df[grep("Oyap",df$Sector),11]<-"Oyapock"
+    df[grep("Brazil",df$Country),11]<-"Brazil"
+    df[grep("Argentina",df$Country),11]<-"Argentina"
+    
+    df2<-df[FALSE,]
+    for (j in unique(df$basins))
+    {
+      rbind(df2,df[which(df$basins==j)[1],c(11,10)])->df2}
+    
+    if (length(which(is.na(df2)))>0){
+      df2<-df2[-(which(is.na(df2[,1]))),]}
+    
+    ####PROBELM ICI####
+    if(length(which((df2$basins=="Colombia"|df2$basins=="Brazil"|df2$basins=="Argentina")))>0){
+    df2<-df2[-(which(df2$basins=="Colombia"|df2$basins=="Brazil"|df2$basins=="Argentina")),]}
+    
+    dfs_raw[[i]]<-df
+    dfs_nas[[i]]<-df[which(is.na(df$basins)),]
+    dfs_filtered[[i]]<-df2
+    
+  }
+  
+  for (i in 1:length(filenames)){
+    colnames(dfs_filtered[[i]])<-c("basins",paste0("K2P",i))
+  }
+  
+  if (length(filenames)==1){
+    dfs_filtered[[1]]->df_merge
+  }
+  
+  if (length(filenames)>1){
+    full_join(dfs_filtered[[1]],dfs_filtered[[2]])->df_merge
+  }
+  
+  if (length(filenames)>2) {
+    for (i in 3:length(filenames)){
+      full_join(df_merge,dfs_filtered[[i]])->df_merge}
+  }
+  
+  colnames(df_merge)->colnames(df_tot)
+  rbind(df_tot,df_merge)->df_tot2
+  
+  ################ POUR VERIFIER ##########
+  
+  #Always check those four lines manually to remove unwanted NAs when you plot new species
+  #dfs_nas[[1]]
+  #dfs_nas[[2]]
+  #dfs_nas[[3]]
+  #length(which(is.na(df_tot2)==T))
+  
+  #If the NA is from a sample from the same region or itself, just replace it by 0. If not,
+  #need to find another solution
+  df_tot2
+  df_tot2[is.na(df_tot2)] = 0
+  
+  df_tot2
+  length(which(is.na(df_tot2)==T))
+  
+  
+  #dfs_filtered[[1]]
+  #dfs_filtered[[2]]
+  #dfs_filtered[[3]]
+  
+  
+  #View(dfs_raw[[1]])
+  #View(dfs_raw[[2]])
+  #View(dfs_raw[[3]])
+  
+  
+  #enregistrer la table avec gradient de couleur pour West/Est
+  WE_scale<-seq(0,0,length=(length(rownames(df_tot2))))
+  cbind(df_tot2,WE_scale)->df_tot2
+  df_tot2$WE_scale[which(df_tot2$basins=="Colombia")]<-1
+  df_tot2$WE_scale[which(df_tot2$basins=="West Guyana")]<-2
+  df_tot2$WE_scale[which(df_tot2$basins=="Essequibo")]<-3
+  df_tot2$WE_scale[which(df_tot2$basins=="East Guyana")]<-3
+  df_tot2$WE_scale[which(df_tot2$basins=="Corantijn")]<-4
+  df_tot2$WE_scale[which(df_tot2$basins=="Nickerie")]<-5
+  df_tot2$WE_scale[which(df_tot2$basins=="Coppename")]<-6
+  df_tot2$WE_scale[which(df_tot2$basins=="Saramacca")]<-7
+  df_tot2$WE_scale[which(df_tot2$basins=="Country_Suriname")]<-7
+  df_tot2$WE_scale[which(df_tot2$basins=="Suriname")]<-8
+  df_tot2$WE_scale[which(df_tot2$basins=="Commewijne")]<-9
+  df_tot2$WE_scale[which(df_tot2$basins=="West Maroni")]<-10
+  df_tot2$WE_scale[which(df_tot2$basins=="North Maroni")]<-11
+  df_tot2$WE_scale[which(df_tot2$basins=="French_Guiana")]<-11
+  df_tot2$WE_scale[which(df_tot2$basins=="East Maroni")]<-12
+  df_tot2$WE_scale[which(df_tot2$basins=="Mana")]<-13
+  df_tot2$WE_scale[which(df_tot2$basins=="Iracoubo")]<-14
+  df_tot2$WE_scale[which(df_tot2$basins=="Sinnamary")]<-15
+  df_tot2$WE_scale[which(df_tot2$basins=="Kourou")]<-16
+  df_tot2$WE_scale[which(df_tot2$basins=="Comte Orapu")]<-17
+  df_tot2$WE_scale[which(df_tot2$basins=="Approuague Kaw")]<-18
+  df_tot2$WE_scale[which(df_tot2$basins=="Oyapock")]<-19
+  df_tot2$WE_scale[which(df_tot2$basins=="Brazil")]<-20
+  df_tot2$WE_scale[which(df_tot2$basins=="Argentina")]<-21
+  
+  
+  ####save_excel_df####
+  df_tot2[order(df_tot2$WE_scale),]->df_tot2
+  write.csv(df_tot2,file=paste0("basins_total_table_",species))
+  all_dftot2[[isp]]<-df_tot2
+  names(all_dftot2)<-species_names
+  
+  
+  #préparer la table pour heatmap et PCA
+  
+  as.data.frame(t(df_tot2),stringsAsFactors = F)->pca_table
+  colnames(pca_table)<-pca_table[1,]
+  pca_table[-c(1,length(rownames(pca_table))),]->pca_table
+  
+  pca_table$Region->regions
+  if(length(which(regions=="West"))>1){
+    for (i in 2:length(which(regions=="West"))){
+      paste("West",i,sep="")->pca_table$Region[(which(regions=="West")[i])]
+    }}
+  if(length(which(regions=="North"))>1){
+    for (i in 2:length(which(regions=="North"))){
+      paste("North",i,sep="")->pca_table$Region[(which(regions=="North")[i])]
+    }}
+  
+  if(length(which(regions=="East"))>1){
+    for (i in 2:length(which(regions=="East"))){
+      paste("East",i,sep="")->pca_table$Region[(which(regions=="East")[i])]
+    }}
+  rownames(pca_table)<-pca_table[,1]
+  pca_table[,-1]->pca_table
+  
+  pca_table2 <- as.data.frame(sapply(pca_table[,-c(1:3)], as.numeric)) 
+  rownames(pca_table2)<-rownames(pca_table)
+  
+  heat_cols<-c("darkblue","blue","deepskyblue","darkturquoise","green","yellow","orange","orangered","red","firebrick") #colors for figures
+  
+  library(ggplot2)
+  library(reshape2)
+  cbind(pca_table2,Haplotype=(rownames(pca_table2)))->heatmap
+  melt(heatmap)->heatmap
+  colnames(heatmap)<-c("Haplotypes","Basins","K2P")
+  plot<-ggplot(data=heatmap,
+               aes(x=Basins, y=Haplotypes, fill=K2P)) + geom_tile() + 
+    geom_text(aes(label=round(K2P,digits=4)), color='black',size=3) + theme_bw()+
+    ggtitle(gsub("_"," ",species))+scale_fill_gradientn(colours = heat_cols)+
+    theme(plot.title = element_text(hjust=0.5))+
+    theme(axis.text.x = element_text(angle = 90,hjust=1))
+  plot
+  
+  pdf(paste0("heatmap_basins_",species,".pdf"))
+  print(plot)
+  dev.off()
+  tiff(paste0("heatmap_basins_",species,".tiff"))
+  print(plot)
+  dev.off()
+  
+  setwd("E:/BARCODE_MARONI/200416_YP/basins_comp_all_nofarcountries/1_total_outputs/basins_plots_and_maps/")
+  pdf(paste0("heatmap_basins_",species,".pdf"))
+  print(plot)
+  dev.off()
+  tiff(paste0("heatmap_basins_",species,".tiff"))
+  print(plot)
+  dev.off()
+  setwd("E:/BARCODE_MARONI/200416_YP/basins_comp_all_nofarcountries/")
+  setwd(species)
+  
+  
+  ####save heatmap for later ####
+  as.factor(paste0(species,"_",heatmap$Haplotypes))->heatmap$Haplotypes
+  rbind(all_heatmaps,heatmap)->all_heatmaps
+  
+  
+  
+  #Faire la PCA
+  ####save pca for later ####
+  1-pca_table2->pca_table2
+  
+  
+  require(ade4)
+  pca<-dudi.pca(pca_table2, center=T, scale=F, scannf = F)
+  pca
+  
+  #test:
+  #s.label(pca$li,1,2)
+  
+  #create dummy axes if needed
+  if (length(pca$li)==1){
+    pca$li$Axis2<-seq(0,0,length=length(rownames(pca$li)))
+    pca$co$Comp2<-seq(0,0,length=length(rownames(pca$co)))}
+  
+  s.label(pca$li,1,2)
+  
+  library(ggplot2)
+  library(ggrepel)
+  
+  #set colors for basins
+  colfunc <- colorRampPalette(c("green","blue","purple"))
+  colfunc(21)->total_scale_colors
+  total_scale_colors[df_tot2$WE_scale[-c(1:4)]]->WE_grad
+  
+  #calculate projected inertia
+  if(length(pca$eig)>1){
+    axis1<-pca$eig[1]/sum(pca$eig)*100
+    axis1<-paste0("Axis 1: ",round(axis1,digits=2),"%")
+    axis2<-pca$eig[2]/sum(pca$eig)*100
+    axis2<-paste0("Axis 2: ",round(axis2,digits=2),"%")
+  }
+  
+  if(length(pca$eig)==1){
+    axis1<-"Axis 1: 100%"
+    axis2<-"Axis 2: 0%"
+  }
+  
+  
+  ####sample_colors####
+  samples_colors<-c()
+  samples_colors[which(regions=="West")]<-"red"
+  samples_colors[which(regions=="North")]<-"blue"
+  samples_colors[which(regions=="East")]<-"darkgreen"
+  
+  ####basins_colors####
+  basins_regions<-c()
+  basins_regions[which(rownames(pca$co)=="West Guyana")]<-"West"
+  basins_regions[which(rownames(pca$co)=="Essequibo")]<-"West"
+  basins_regions[which(rownames(pca$co)=="East Guyana")]<-"West"
+  basins_regions[which(rownames(pca$co)=="Corantijn")]<-"West"
+  basins_regions[which(rownames(pca$co)=="Nickerie")]<-"West"
+  basins_regions[which(rownames(pca$co)=="Coppename")]<-"West"
+  basins_regions[which(rownames(pca$co)=="Saramacca")]<-"West"
+  basins_regions[which(rownames(pca$co)=="Country_Suriname")]<-"West"
+  basins_regions[which(rownames(pca$co)=="Suriname")]<-"West"
+  basins_regions[which(rownames(pca$co)=="Commewijne")]<-"West"
+  basins_regions[which(rownames(pca$co)=="West Maroni")]<-"West"
+  basins_regions[which(rownames(pca$co)=="North Maroni")]<-"North Maroni"
+  basins_regions[which(rownames(pca$co)=="French_Guiana")]<-"FG unknown"
+  basins_regions[which(rownames(pca$co)=="East Maroni")]<-"East"
+  basins_regions[which(rownames(pca$co)=="Mana")]<-"East"
+  basins_regions[which(rownames(pca$co)=="Iracoubo")]<-"East"
+  basins_regions[which(rownames(pca$co)=="Sinnamary")]<-"East"
+  basins_regions[which(rownames(pca$co)=="Kourou")]<-"East"
+  basins_regions[which(rownames(pca$co)=="Comte Orapu")]<-"East"
+  basins_regions[which(rownames(pca$co)=="Approuague Kaw")]<-"East"
+  basins_regions[which(rownames(pca$co)=="Oyapock")]<-"East"
+  as.factor(basins_regions)->basins_regions
+  
+  #basins_colors<-c()
+  #basins_colors[which(basins_regions=="Other")]<-"black"
+  #basins_colors[which(basins_regions=="West")]<-"red"
+  #basins_colors[which(basins_regions=="North Maroni")]<-"blue"
+  #basins_colors[which(basins_regions=="FG unknown")]<-"turquoise"
+  #basins_colors[which(basins_regions=="East")]<-"green"
+  basins_colors<-c("West"="red",
+                   "North Maroni"="blue","FG unknown"="turquoise","East"="darkgreen")
+  
+  #df_tot2$WE_scale[-c(1:4)]->WE_grad
+  #total_scale_colors
+  
+  plot <- ggplot(data=pca$li,aes(x=Axis1, y=Axis2))+geom_hline(yintercept=0,
+                                                               col="darkgrey")+
+    geom_vline(xintercept=0, col="darkgrey")+geom_point()+
+    geom_text_repel(aes(label=rownames(pca$li)),show.legend = FALSE,
+                    size=5,col=samples_colors)+
+    theme_bw()+
+    geom_text_repel(data=pca$co,size=4,aes(x=Comp1, y=Comp2,label=rownames(pca$co),
+                                           col=basins_regions))+
+    xlab(axis1)+ylab(axis2)+ggtitle(gsub("_"," ",species))+
+    theme(plot.title = element_text(hjust=0.5))+
+    scale_colour_manual(values=basins_colors)
+  
+  #scale_colour_gradientn(colors=total_scale_colors,limits=c(1,21),breaks=c(1,11,21),
+  #labels=c("West","Center","East"),name=NULL)+
+  #df_tot2$WE_scale[-c(1:4)]
+  plot
+  
+  pdf(paste0("pca_basins_",species,".pdf"))
+  print(plot)
+  dev.off()
+  tiff(paste0("pca_basins_",species,".tiff"))
+  print(plot)
+  dev.off()
+  
+  setwd("E:/BARCODE_MARONI/200416_YP/basins_comp_all_nofarcountries/1_total_outputs/basins_plots_and_maps/")
+  pdf(paste0("pca_basins_",species,".pdf"))
+  print(plot)
+  dev.off()
+  tiff(paste0("pca_basins_",species,".tiff"))
+  print(plot)
+  dev.off()
+  setwd("E:/BARCODE_MARONI/200416_YP/basins_comp_all_nofarcountries/")
+  setwd(species)
+  
+  
+  paste0(isp,rownames(pca_table2))->ID
+  cbind(ID,pca_table2)->pca_table2
+  pca_table2->all_pca_table2[[isp]]
+  
+  
+  if (isp==2){
+    full_join(all_pca_table2[[1]],pca_table2)->total_pca_table
+  }
+  
+  if (isp>2){
+    full_join(total_pca_table,pca_table2)->total_pca_table
+  }
+}
+
+
+################### PLOT TOTAL HEATMAP ############
+setwd("E:/BARCODE_MARONI/200416_YP/basins_comp_all_nofarcountries/1_total_outputs")
+all_heatmaps->heatmap
+plot<-ggplot(data=heatmap,
+             aes(x=Basins, y=Haplotypes, fill=K2P)) + geom_tile() + 
+  geom_text(aes(label=round(K2P,digits=4)), color='black',size=0.7) + theme_bw()+
+  ggtitle("Heatmap All Species")+scale_fill_gradientn(colours = heat_cols)+
+  theme(plot.title = element_text(hjust=0.5))+
+  theme(axis.text.x = element_text(angle = 90,hjust=1,size=5),
+        axis.text.y=element_text(size=3))
+
+plot
+
+#dev.new(width=4,height=10,unit="in",noRStudioGD = T)dev.new(width=2,height=10,unit="in",noRStudioGD = T)
+pdf(paste0("heatmap_basins_total.pdf"),width=4,height=10)
+print(plot)
+dev.off()
+tiff(paste0("heatmap_basins.tiff"),width=4,height=10,res=350,units="in")
+print(plot)
+dev.off()
+
+################### PLOT TOTAL PCA ############
+
+total_pca_table->pca_table2
+pca_table2$ID->rownames(pca_table2)
+pca_table2[,-1]->pca_table2
+
+library("missMDA")
+estim<-estim_ncpPCA(pca_table2, ncp.min = 0, ncp.max = 5)
+imputePCA(pca_table2,ncp=3)->imputeNA
+#Here we forced 3 axes. former was ncp=estim$ncp, and it was 2
+as.data.frame(imputeNA$completeObs)->pca_table3
+
+require(ade4)
+pca<-dudi.pca(pca_table3, center=T, scale=F, scannf = F,nf=3)
+pca
+
+#test:
+s.label(pca$li,1,2)
+
+#create dummy axes if needed
+if (length(pca$li)==1){
+  pca$li$Axis2<-seq(0,0,length=length(rownames(pca$li)))
+  pca$co$Comp2<-seq(0,0,length=length(rownames(pca$co)))}
+
+s.label(pca$li,1,2)
+
+library(ggplot2)
+library(ggrepel)
+
+#calculate projected inertia
+if(length(pca$eig)>1){
+  axis1<-pca$eig[1]/sum(pca$eig)*100
+  axis1<-paste0("Axis 1: ",round(axis1,digits=2),"%")
+  axis2<-pca$eig[2]/sum(pca$eig)*100
+  axis2<-paste0("Axis 2: ",round(axis2,digits=2),"%")
+  axis3<-pca$eig[3]/sum(pca$eig)*100
+  axis3<-paste0("Axis 3: ",round(axis3,digits=2),"%")
+}
+
+if(length(pca$eig)==1){
+  axis1<-"Axis 1: 100%"
+  axis2<-"Axis 2: 0%"
+}
+
+df_tot2$WE_scale[-c(1:4)]->WE_grad
+total_scale_colors
+#enregistrer la table avec gradient de couleur pour West/Est
+WE_scale<-seq(0,0,length=(length(pca_table3)))
+WE_scale[which(colnames(pca_table3)=="Colombia")]<-1
+WE_scale[which(colnames(pca_table3)=="West Guyana")]<-2
+WE_scale[which(colnames(pca_table3)=="Essequibo")]<-3
+WE_scale[which(colnames(pca_table3)=="East Guyana")]<-3
+WE_scale[which(colnames(pca_table3)=="Corantijn")]<-4
+WE_scale[which(colnames(pca_table3)=="Nickerie")]<-5
+WE_scale[which(colnames(pca_table3)=="Coppename")]<-6
+WE_scale[which(colnames(pca_table3)=="Saramacca")]<-7
+WE_scale[which(colnames(pca_table3)=="Country_Suriname")]<-7
+WE_scale[which(colnames(pca_table3)=="Suriname")]<-8
+WE_scale[which(colnames(pca_table3)=="Commewijne")]<-9
+WE_scale[which(colnames(pca_table3)=="West Maroni")]<-10
+WE_scale[which(colnames(pca_table3)=="North Maroni")]<-11
+WE_scale[which(colnames(pca_table3)=="French_Guiana")]<-11
+WE_scale[which(colnames(pca_table3)=="East Maroni")]<-12
+WE_scale[which(colnames(pca_table3)=="Mana")]<-13
+WE_scale[which(colnames(pca_table3)=="Iracoubo")]<-14
+WE_scale[which(colnames(pca_table3)=="Sinnamary")]<-15
+WE_scale[which(colnames(pca_table3)=="Kourou")]<-16
+WE_scale[which(colnames(pca_table3)=="Comte Orapu")]<-17
+WE_scale[which(colnames(pca_table3)=="Approuague Kaw")]<-18
+WE_scale[which(colnames(pca_table3)=="Oyapock")]<-19
+WE_scale[which(colnames(pca_table3)=="Brazil")]<-20
+WE_scale[which(colnames(pca_table3)=="Argentina")]<-21
+
+####sample_colors####
+samples_colors<-c()
+samples_colors[grep("West",rownames(pca$li))]<-"red"
+samples_colors[grep("North",rownames(pca$li))]<-"blue"
+samples_colors[grep("East",rownames(pca$li))]<-"darkgreen"
+
+####basins_colors####
+basins_regions<-c()
+basins_regions[which(rownames(pca$co)=="West Guyana")]<-"West"
+basins_regions[which(rownames(pca$co)=="Essequibo")]<-"West"
+basins_regions[which(rownames(pca$co)=="East Guyana")]<-"West"
+basins_regions[which(rownames(pca$co)=="Corantijn")]<-"West"
+basins_regions[which(rownames(pca$co)=="Nickerie")]<-"West"
+basins_regions[which(rownames(pca$co)=="Coppename")]<-"West"
+basins_regions[which(rownames(pca$co)=="Saramacca")]<-"West"
+basins_regions[which(rownames(pca$co)=="Country_Suriname")]<-"West"
+basins_regions[which(rownames(pca$co)=="Suriname")]<-"West"
+basins_regions[which(rownames(pca$co)=="Commewijne")]<-"West"
+basins_regions[which(rownames(pca$co)=="West Maroni")]<-"West"
+basins_regions[which(rownames(pca$co)=="North Maroni")]<-"North Maroni"
+basins_regions[which(rownames(pca$co)=="French_Guiana")]<-"FG unknown"
+basins_regions[which(rownames(pca$co)=="East Maroni")]<-"East"
+basins_regions[which(rownames(pca$co)=="Mana")]<-"East"
+basins_regions[which(rownames(pca$co)=="Iracoubo")]<-"East"
+basins_regions[which(rownames(pca$co)=="Sinnamary")]<-"East"
+basins_regions[which(rownames(pca$co)=="Kourou")]<-"East"
+basins_regions[which(rownames(pca$co)=="Comte Orapu")]<-"East"
+basins_regions[which(rownames(pca$co)=="Approuague Kaw")]<-"East"
+basins_regions[which(rownames(pca$co)=="Oyapock")]<-"East"
+as.factor(basins_regions)->basins_regions
+
+basins_colors<-c("West"="red",
+                 "North Maroni"="blue","FG unknown"="turquoise","East"="darkgreen")
+
+#Axis 1 and 2 text
+plot1 <- ggplot(data=pca$li,aes(x=Axis1, y=Axis2))+
+  geom_hline(yintercept=0, col="darkgrey")+
+  geom_vline(xintercept=0, col="darkgrey")+geom_point()+
+  geom_text_repel(aes(label=rownames(pca$li)),
+                  show.legend = FALSE,size=5,col=samples_colors)+
+  theme_bw()+
+  scale_colour_manual(values=basins_colors)+
+  geom_text_repel(data=pca$co,size=4,aes(x=Comp1, y=Comp2,label=rownames(pca$co),
+                                         col=basins_regions))+
+  xlab(axis1)+ylab(axis2) + 
+  theme(plot.title = element_text(hjust=0.5))
+
+
+plot1
+pdf(paste0("pca_basins1.pdf"))
+print(plot1)
+dev.off()
+tiff(paste0("pca_basins1.tiff"))
+print(plot1)
+dev.off()
+
+#Axes 1 and 2 points
+plot2 <- ggplot(data=pca$li,aes(x=Axis1, y=Axis2))+
+  geom_hline(yintercept=0, col="darkgrey")+
+  geom_vline(xintercept=0, col="darkgrey")+
+  geom_point(show.legend = FALSE,size=2,fill=samples_colors,shape=21)+
+  theme_bw()+
+  scale_fill_manual(values=basins_colors)+
+  geom_point(data=pca$co,size=2,shape=24,aes(x=Comp1, y=Comp2,
+                                             fill=basins_regions))+
+  xlab(axis1)+ylab(axis2) + 
+  theme(plot.title = element_text(hjust=0.5))
+
+#df_tot2$WE_scale[-c(1:4)]
+plot2
+
+pdf(paste0("pca_basins2.pdf"))
+print(plot2)
+dev.off()
+tiff(paste0("pca_basins2.tiff"))
+print(plot2)
+dev.off()
+
+#Axes 1 and 2 text basins
+plot3 <- ggplot(data=pca$li,aes(x=Axis1, y=Axis2))+
+  geom_hline(yintercept=0, col="darkgrey")+
+  geom_vline(xintercept=0, col="darkgrey")+
+  geom_point(show.legend = FALSE,size=2,fill=samples_colors,shape=21)+
+  theme_bw()+
+  scale_colour_manual(values=basins_colors)+
+  geom_text_repel(data=pca$co,size=4,aes(x=Comp1, y=Comp2,label=rownames(pca$co),
+                                         col=basins_regions))+
+  xlab(axis1)+ylab(axis2) + 
+  theme(plot.title = element_text(hjust=0.5))
+
+#df_tot2$WE_scale[-c(1:4)]
+plot3
+
+pdf(paste0("pca_basins3.pdf"))
+print(plot3)
+dev.off()
+tiff(paste0("pca_basins3.tiff"))
+print(plot3)
+dev.off()
+
+#Axis 2 and 3 text
+plot4 <- ggplot(data=pca$li,aes(x=Axis2, y=Axis3))+
+  geom_hline(yintercept=0, col="darkgrey")+
+  geom_vline(xintercept=0, col="darkgrey")+geom_point()+
+  geom_text_repel(aes(label=rownames(pca$li)),
+                  show.legend = FALSE,size=5,col=samples_colors)+
+  theme_bw()+
+  scale_colour_manual(values=basins_colors)+
+  geom_text_repel(data=pca$co,size=4,aes(x=Comp1, y=Comp2,label=rownames(pca$co),
+                                         col=basins_regions))+
+  xlab(axis2)+ylab(axis3) + 
+  theme(plot.title = element_text(hjust=0.5))
+
+#df_tot2$WE_scale[-c(1:4)]
+plot4
+pdf(paste0("pca_basins4.pdf"))
+print(plot4)
+dev.off()
+tiff(paste0("pca_basins4.tiff"))
+print(plot4)
+dev.off()
+
+#Axis 2 and 3 points
+plot5 <- ggplot(data=pca$li,aes(x=Axis2, y=Axis3))+
+  geom_hline(yintercept=0, col="darkgrey")+
+  geom_vline(xintercept=0, col="darkgrey")+
+  geom_point(show.legend = FALSE,size=2,fill=samples_colors,shape=21)+
+  theme_bw()+
+  scale_fill_manual(values=basins_colors)+
+  geom_point(data=pca$co,size=2,shape=24,aes(x=Comp1, y=Comp2,
+                                             fill=basins_regions))+
+  xlab(axis2)+ylab(axis3) + 
+  theme(plot.title = element_text(hjust=0.5))
+
+#df_tot2$WE_scale[-c(1:4)]
+plot5
+
+pdf(paste0("pca_basins5.pdf"))
+print(plot5)
+dev.off()
+tiff(paste0("pca_basins5.tiff"))
+print(plot5)
+dev.off()
+
+#Axis 2 and 3 basins text
+plot6 <- ggplot(data=pca$li,aes(x=Axis2, y=Axis3))+
+  geom_hline(yintercept=0, col="darkgrey")+
+  geom_vline(xintercept=0, col="darkgrey")+
+  geom_point(show.legend = FALSE,size=2,fill=samples_colors,shape=21)+
+  theme_bw()+
+  scale_colour_manual(values=basins_colors)+
+  geom_text_repel(data=pca$co,size=4,aes(x=Comp1, y=Comp2,label=rownames(pca$co),
+                                         col=basins_regions))+
+  xlab(axis2)+ylab(axis3) + 
+  theme(plot.title = element_text(hjust=0.5))
+
+#
+plot6
+
+pdf(paste0("pca_basins6.pdf"))
+print(plot6)
+dev.off()
+tiff(paste0("pca_basins6.tiff"))
+print(plot6)
+dev.off()
+
+
+#Aes 1 and 2 zoom
+plot7 <- ggplot(data=pca$li,aes(x=Axis1, y=Axis2))+
+  geom_hline(yintercept=0, col="darkgrey")+
+  geom_vline(xintercept=0, col="darkgrey")+
+  geom_point(show.legend = FALSE,size=2,fill=samples_colors,shape=21)+
+  theme_bw()+
+  scale_colour_manual(values=basins_colors)+
+  geom_text_repel(data=pca$co,size=4,aes(x=Comp1, y=Comp2,label=rownames(pca$co),
+                                         col=basins_regions))+
+  xlab(axis1)+ylab(axis2) + 
+  theme(plot.title = element_text(hjust=0.5))+
+  coord_cartesian(xlim = c(-0.035, 0.05),ylim=c(-0.025,0.015)) 
+
+#df_tot2$WE_scale[-c(1:4)]
+plot7
+pdf(paste0("pca_basins7.pdf"))
+print(plot7)
+dev.off()
+tiff(paste0("pca_basins7.tiff"))
+print(plot7)
+dev.off()
+
+#Axes 2 and 3 zoom
+plot8 <- ggplot(data=pca$li,aes(x=Axis2, y=Axis3))+
+  geom_hline(yintercept=0, col="darkgrey")+
+  geom_vline(xintercept=0, col="darkgrey")+
+  geom_point(show.legend = FALSE,size=2,fill=samples_colors,shape=21)+
+  theme_bw()+
+  scale_colour_manual(values=basins_colors)+
+  geom_text_repel(data=pca$co,size=4,aes(x=Comp2, y=Comp3,label=rownames(pca$co),
+                                         col=basins_regions))+
+  xlab(axis2)+ylab(axis3) + 
+  theme(plot.title = element_text(hjust=0.5))+
+  coord_cartesian(xlim = c(-0.025, 0.015),ylim=c(-0.03,0.03)) 
+
+#df_tot2$WE_scale[-c(1:4)]
+plot8
+
+pdf(paste0("pca_basins8.pdf"))
+print(plot8)
+dev.off()
+tiff(paste0("pca_basins8.tiff"))
+print(plot8)
+dev.off()
+
+
+#variables only
+#Axis 1 and 2
+plot9 <- ggplot(data=pca$co,aes(x=Comp1, y=Comp2,col=basins_regions))+
+  geom_hline(yintercept=0, col="darkgrey")+
+  geom_vline(xintercept=0, col="darkgrey")+
+  theme_bw()+geom_label(aes(label=rownames(pca$co)))+
+  scale_colour_manual(values=basins_colors)+
+  xlab(axis1)+ylab(axis2) + 
+  theme(plot.title = element_text(hjust=0.5))
+
+pdf(paste0("pca_basins9_variables_only.pdf"))
+print(plot9)
+dev.off()
+tiff(paste0("pca_basins9_variables_only.tiff"))
+print(plot9)
+dev.off()
+
+#variables only_zoom
+#Axes 1 and 2
+plot10 <- ggplot(data=pca$co,aes(x=Comp1, y=Comp2,col=basins_regions))+
+  geom_hline(yintercept=0, col="darkgrey")+
+  geom_vline(xintercept=0, col="darkgrey")+
+  theme_bw()+geom_label_repel(aes(label=rownames(pca$co)))+
+  scale_colour_manual(values=basins_colors)+
+  xlab(axis1)+ylab(axis2) + 
+  theme(plot.title = element_text(hjust=0.5))
+
+pdf(paste0("pca_basins10_variables_only_zoom.pdf"))
+print(plot10)
+dev.off()
+tiff(paste0("pca_basins10_variables_only_zoom.tiff"),res=350,width=8,height=5,units="in")
+print(plot10)
+dev.off()
+
+#variables only
+#Axis 2 and 3 
+plot11 <- ggplot(data=pca$co,aes(x=Comp2, y=Comp3,col=basins_regions))+
+  geom_hline(yintercept=0, col="darkgrey")+
+  geom_vline(xintercept=0, col="darkgrey")+
+  theme_bw()+geom_label(aes(label=rownames(pca$co)))+
+  scale_colour_manual(values=basins_colors)+
+  xlab(axis2)+ylab(axis3) + 
+  theme(plot.title = element_text(hjust=0.5))
+
+pdf(paste0("pca_basins11_variables_only.pdf"))
+print(plot11)
+dev.off()
+tiff(paste0("pca_basins11_variables_only.tiff"))
+print(plot11)
+dev.off()
+
+
+#Create oredered vector of short names
+genus_short<-substr(all_species, start = 1, stop = 1)
+middle <- sub(".*_", "", all_species)
+middle<-substr(middle, start = 1, stop = 3)
+paste(genus_short,middle,sep="")->short_names
+which(duplicated(short_names))
+all_species[which(duplicated(short_names))]
+short_names[25]<-"Pacri"
+short_names[26]<-"Pccri"
+which(duplicated(short_names))
+species_labels<-c()
+
+for (i in 1:length(all_pca_table2)) {
+  substr(gsub('[0-9]+', '', all_pca_table2[[i]]$ID), start = 1, stop = 1)->firstl
+  paste(short_names[i],firstl,sep="")->firstl
+  species_labels<-c(species_labels,firstl)
+}
+
+#Axis 1 and 2 text
+plot13 <- ggplot(data=pca$li,aes(x=Axis1, y=Axis2))+
+  geom_hline(yintercept=0, col="darkgrey")+
+  geom_vline(xintercept=0, col="darkgrey")+
+  geom_label(aes(label=species_labels),
+                  show.legend = T,size=2.5)+
+  theme_bw()+
+  
+  xlab(axis1)+ylab(axis2) + 
+  theme(plot.title = element_text(hjust=0.5))
+
+#scale_colour_manual(values=basins_colors)+
+plot13
+pdf(paste0("pca_basins13.pdf"))
+print(plot13)
+dev.off()
+tiff(paste0("pca_basins13.tiff"),res=350,width=6,height=5,units="in")
+print(plot13)
+dev.off()
+
+#Axis 1 and 2 text
+plot14 <- ggplot(data=pca$li,aes(x=Axis1, y=Axis2))+
+  geom_hline(yintercept=0, col="darkgrey")+
+  geom_vline(xintercept=0, col="darkgrey")+
+  geom_label(aes(label=species_labels),
+             show.legend = T,size=2.5)+
+  theme_bw()+
+  xlab(axis1)+ylab(axis2) + 
+  theme(plot.title = element_text(hjust=0.5))+
+  coord_cartesian(xlim = c(-0.09, 0.1),ylim=c(-0.05,0.075)) 
+
+#scale_colour_manual(values=basins_colors)+
+plot14
+pdf(paste0("pca_basins14.pdf"))
+print(plot14)
+dev.off()
+tiff(paste0("pca_basins14.tiff"),res=350,width=6,height=5,units="in")
+print(plot14)
+dev.off()
