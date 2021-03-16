@@ -10,15 +10,15 @@
 #shapefiles directory with sa_dem_30s.bil
 
 ####MUST BE DEFINED BY USER #####
-session1<-"G:/DATA/WORK/P4 MARONI BARCODE/BARCODE_MARONI/201209_back_Raph1/R_ANALYSES_SUPP/Maroni_Barcode-master/1_Dist_tables_BIN"
+session1<-"your/session/path/here"
 load(paste0(session1,"/env_1_Dist_tables.RData")) #~10 sec
 #3 objects
 
-session_Fig1<-"G:/DATA/WORK/P4 MARONI BARCODE/BARCODE_MARONI/200819_scripts_and_data/SCRIPTS_AND_DATA/FIGURE1"
+session_Fig1<-"your/session/path/here"
 load(paste0(session_Fig1,"/Figure1_all_data.RData")) 
 #4 objects: basemap, ext_basemap, pal, maroni_basins
 
-session2<-"G:/DATA/WORK/P4 MARONI BARCODE/BARCODE_MARONI/201209_back_Raph1/R_ANALYSES_SUPP/Maroni_Barcode-master/2_Landscapes_BIN"
+session2<-"your/session/path/here"
 setwd(session2)
 
 load("maroni_shapefile.RData")
