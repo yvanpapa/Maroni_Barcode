@@ -1,6 +1,5 @@
 ####1: CREATE DIST TABLES FROM DNA AND LOCS####
-#This script computes distance matrices and other useful tables for
-#each species.
+#Script 1 modified to use BINS instead of species names
 
 #Inputs needed: 
 #1)Maroni_loc.txt   Tab-delimited text file with six columns: Species, Lat, Lon, field.num, Exact_Site, BIN
