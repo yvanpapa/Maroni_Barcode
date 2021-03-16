@@ -1,6 +1,5 @@
 ####1: CREATE DIST TABLES FROM DNA AND LOCS####
-#This script computes distance matrices and other useful tables for
-#each species.
+#Script 1 modified for Figure S3: Simulate a distribution restricted to the outer parts of the sampling area for a few selected species 
 
 #Inputs needed: 
 #1)Maroni_loc.txt   Tab-delimited text file with five columns: Species, Lat, Lon, field.num, Exact_Site
@@ -10,7 +9,7 @@
 #Check carefully that species names match between Maroni loc and all_seq
 
 ####MUST BE DEFINED BY USER #####
-session1<-"G:/DATA/WORK/P4 MARONI BARCODE/BARCODE_MARONI/201209_back_Raph1/R_ANALYSES_SUPP/Maroni_Barcode-master/simulations"
+session1<-"my/session/directory"
 setwd(session1)
 
 ####ALL PACKAGES##### not including their dependencies
