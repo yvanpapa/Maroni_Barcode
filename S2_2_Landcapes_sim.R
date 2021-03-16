@@ -1,22 +1,24 @@
 ###2: PHYLIN ANALYSIS AND MAPS###
 
+#Script 1 modified for Figure S3: Simulate a distribution restricted to the outer parts of the sampling area for a few selected species 
+
 #Inputs needed:
-#1_Dist_tables environment
+#S2 Dist_tables environment
 #Figure 1 environment (Figure1_data.RData)
 #Maroni shapefile environment (was drawn by hand, formerly a) 
 ###Maroni shapefile env is not enough anymore (raster update). Now you also need:
 #shapefiles directory with sa_dem_30s.bil
 
 ####MUST BE DEFINED BY USER #####
-session1<-"G:/DATA/WORK/P4 MARONI BARCODE/BARCODE_MARONI/201209_back_Raph1/R_ANALYSES_SUPP/Maroni_Barcode-master/simulations"
+session1<-"my/session/path"
 load(paste0(session1,"/env_1_Dist_tables.RData")) #~10 sec
 #3 objects
 
-session_Fig1<-"G:/DATA/WORK/P4 MARONI BARCODE/BARCODE_MARONI/200819_scripts_and_data/SCRIPTS_AND_DATA/FIGURE1"
+session_Fig1<-"my/session/path"
 load(paste0(session_Fig1,"/Figure1_data.RData")) 
 #4 objects: basemap, ext_basemap, pal, maroni_basins
 
-session2<-"G:/DATA/WORK/P4 MARONI BARCODE/BARCODE_MARONI/201209_back_Raph1/R_ANALYSES_SUPP/Maroni_Barcode-master/simulations"
+session2<-"my/session/path"
 setwd(session2)
 
 load("maroni_shapefile.RData")
