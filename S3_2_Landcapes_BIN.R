@@ -1,5 +1,7 @@
 ###2: PHYLIN ANALYSIS AND MAPS###
 
+#Script 2 modified to use BINS instead of species names
+
 #Inputs needed:
 #1_Dist_tables environment
 #Figure 1 environment (Figure1_data.RData)
